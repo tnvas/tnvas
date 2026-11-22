@@ -58,7 +58,11 @@ make win_build</pre>
 <h2>Fresh off the bench</h2>
  
 <!-- PROJECTS:START -->
-_Nothing new yet. New repos show up here automatically._
+| Project | What it does | Stack |
+|---|---|---|
+| [**FutekUsb_DesktopUI**](https://github.com/tnvas/FutekUsb_DesktopUI) | Simple GUI to record from a Futek USB220 device to csv files with the option to export recording as a graph (image) | `Go` |
+| [**VRStreamDeck**](https://github.com/tnvas/VRStreamDeck) | HTTPS webserver for localhosting VR videos to Quest and other VR devices | `JavaScript` |
+| [**wgAdmin**](https://github.com/tnvas/wgAdmin) | A Linux based wireguard GUI for managing wireguard configs. | `Go` |
 <!-- PROJECTS:END -->
  
 <br/>
