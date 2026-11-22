@@ -1,0 +1,68 @@
+name: Update latest projects
+
+# Rebuilds the "Latest projects" section of README.md from your public repositories.
+on:
+  schedule:
+    - cron: "17 4 * * *" # daily
+  workflow_dispatch: # run manually from the Actions tab
+  push:
+    branches: [main]
+    paths-ignore: ["README.md"]
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build project list
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const owner = context.repo.owner;
+            const MAX = 6;
+
+            const repos = await github.paginate(github.rest.repos.listForUser, {
+              username: owner, type: 'owner', sort: 'pushed', per_page: 100,
+            });
+
+            const picked = repos
+              .filter(r => !r.fork && !r.archived && !r.private && r.name.toLowerCase() !== owner.toLowerCase())
+              .slice(0, MAX);
+
+            let block;
+            if (picked.length === 0) {
+              block = '_New projects are on the way. This list updates itself as repositories are published._';
+            } else {
+              const rows = picked.map(r => {
+                const desc = (r.description || 'No description yet').replace(/\|/g, '\\|');
+                const lang = r.language ? `\`${r.language}\`` : '';
+                const stars = r.stargazers_count ? ` ⭐ ${r.stargazers_count}` : '';
+                return `| [**${r.name}**](${r.html_url}) | ${desc} | ${lang}${stars} |`;
+              });
+              block = ['| Project | What it does | Stack |', '|---|---|---|', ...rows].join('\n');
+            }
+
+            const path = 'README.md';
+            const readme = fs.readFileSync(path, 'utf8');
+            const updated = readme.replace(
+              /<!-- PROJECTS:START -->[\s\S]*?<!-- PROJECTS:END -->/,
+              `<!-- PROJECTS:START -->\n${block}\n<!-- PROJECTS:END -->`
+            );
+            fs.writeFileSync(path, updated);
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet README.md; then
+            echo "No changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Update latest projects"
+          git push
